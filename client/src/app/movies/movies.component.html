@@ -1,0 +1,124 @@
+<body>
+    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-bottom: 11px;">
+        <div class="container-fluid"> 
+            <a class="navbar-brand" href="#">MovieList</a>
+            <div class="collapse navbar-collapse" id="profile">
+            <ul class="navbar-nav" style="position:absolute;top:5px;left:150px;margin-right:4em;">
+                <li class="nav-item">
+                    <button id="todoBtn" type="button" class="btn mb-3 btn-secondary" (click)="todoView()">Want to Watch</button>
+                </li>
+                <li class="nav-item">
+                    <button id="watchedBtn" type="button" class="btn mb-3 btn-secondary" (click)="watchedView()">Already Watched</button>
+                </li>
+            </ul>
+            <ul class="navbar-nav" style="position:absolute;top:5px;right:0;margin-right:4em;">
+                <li class="nav-item">
+                <button id="settingsBtn" *ngIf="curUser.admin" type="button" class="btn mb-3 btn-secondary" (click)="settingsView()">Settings</button>
+                </li>
+                <li class="nav-item">
+                    <button id="logoutBtn" type="button" class="btn mb-3 btn-secondary" (click)="logout()">Logout</button>
+                </li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <form id="loginPage" class="">
+        <h3>Login</h3>                      
+        <div>
+            <div class="form-group mb-2">
+            <label for="lg_userName" class="sr-only">Username</label>
+            <input id="userInput" type="text" class="form-control" name="userName" placeholder="userName" [(ngModel)]="userName">
+            </div>
+
+            <div class="form-group mb-2">
+            <label for="lg_password" class="sr-only">Password</label>
+            <input id="passInput" type="password" class="form-control" name="password" placeholder="password" [(ngModel)]="password">        
+        </div>
+
+        <button type="submit" (click)="login()" class="btn btn-primary btn-sm">Login
+            <i class="glyphicon glyphicon-chevron-right"></i>
+        </button>
+        </div>
+    </form>
+
+    <div id="todoPage">
+        <div id="searchbar" class="search-container">
+            <input type="text" [(ngModel)]="searchInput" placeholder="Search movies...">
+            <button (click)="search()">Search</button>
+        </div>
+        <table id="todoTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="text-align: center; font-size: xx-large;" colspan="4">Want to Watch List</th>
+                </tr>
+                <tr class="table-active">
+                    <th scope="col">Title</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody id="todoRows">
+
+            </tbody>
+        </table>
+    </div>
+
+    <div id="watchedPage">
+        <table id="watchedTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="text-align: center; font-size:xx-large;" colspan="5">Already Watched List</th>
+                </tr>
+                <tr class="table-active">
+                    <th scope="col">Title</th>
+                    <th scope="col">Date Seen</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody id="watchedRows">
+
+            </tbody>
+        </table>
+        <div id="sortBox">
+            <p>Sort By: </p>
+            <button id="titlesortBtn" type="button" class="sortBtn" (click)="filterBy('title')">Title</button>
+            <button id="datesortBtn" type="button" class="sortBtn" (click)="filterBy('date')">Date</button>
+            
+        </div>
+    </div>
+
+    <div id="detailsPage">
+        <div class="titleBox">
+            <h2 id="title">Title Box</h2>
+        </div>
+        <div class="descriptionBox">
+            <h5 id="description"></h5>
+        </div>
+        <div id="releasedBox">
+            <H4>Released on</H4>
+            <h5 id="released"></h5>
+        </div>
+        <div id="watchedBox">
+            <h4>Watched on</h4>
+            <h5 id="watched"></h5>
+        </div>
+    </div>
+
+    <div id="settingsPage">
+        <table id="settingsTable" class="table table-striped">
+            <thead>
+                <tr class="table-active">
+                    <th scope="col">Username</th>
+                    <th scope="col">Enable/Disable</th>
+                </tr>
+            </thead>
+            <tbody id="settingsRows">
+
+            </tbody>
+        </table>
+    </div>
+</body>

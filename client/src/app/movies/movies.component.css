@@ -1,0 +1,72 @@
+#detailsPage{
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+body{
+    background-image:url('../../assets/background.jpg') ;
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+}
+
+#sortBox{
+    display: flex;
+    flex-wrap: nowrap;
+    margin: 10px;
+}
+.sortBtn{
+    margin-left: 15px;
+    border-radius: 20%;
+    background-color: lightgrey;
+}
+#searchbar{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    font-size: x-large;
+}
+.titleBox {
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    margin-left: 2%;
+    margin-right: 2%;
+    font-size: larger;
+}
+.descriptionBox {
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+#releasedBox{
+    width: 46%;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-left: 2%;
+    float: left;
+}
+#watchedBox{
+    width: 46%;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-right: 2%;
+    float: right;
+}
