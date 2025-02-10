@@ -7,6 +7,7 @@ const user = require('../models/user');
 
 var curUser =null;//set upon login, reset on logout
 
+//Testing DB
 async function run(){
   User.create({
     userName: 'admin',
@@ -22,6 +23,7 @@ async function run(){
     password: 'userB'
   })
 }
+// run();
 
 function printMovies(){
   console.log("PRINTNG MOVIES");
@@ -83,8 +85,8 @@ router.post('/login', async function(req, res, next){
   try{
     curUser = await user.findOne({userName : req.body.userName});
     if(curUser.password == req.body.password){//LOGIN
-      if(curUser.disabled == false){
-        //console.log("logged into=",curUser.userName);
+      if(curUser.disabled == false || curUser.disabled == undefined){
+        console.log("logged into=",curUser.userName);
       res.send(curUser);
       }
     }

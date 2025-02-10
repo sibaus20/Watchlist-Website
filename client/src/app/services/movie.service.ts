@@ -17,13 +17,11 @@ export class MovieService {
     var ans = this.http.get<User>(url);
     return ans;
   }
-
   login( userName : String, password : String  ) : Observable<User> {
     let headers = { "Content-Type": "application/x-www-form-urlencoded"};
-    console.log("loggin into "+userName+" wit pass "+password);
+    console.log("logging into "+userName+" with pass "+password);
     return this.http.post<User>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} );
   }
-  
   update(user: User): Observable<User> {
     let headers = { "Content-Type": "application/json" };
     return this.http.post<User>(this.URL + "/update", user, { headers });
@@ -39,5 +37,4 @@ export class MovieService {
     let headers =  { "Content-Type": "application/json" };
     return this.http.post<User>(this.URL+'/sort/'+filter,user,{headers});
   }
-
 }

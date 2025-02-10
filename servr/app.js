@@ -15,10 +15,11 @@ app.set('view engine', 'jade');
 
 //MONGO
 var mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://admin:admin@movielist.h04cqw0.mongodb.net/test');
+mongoose.connect('mongodb+srv://admin:admin@cluster0.dncmu.mongodb.net/User');
 var db = mongoose.connection;
 db.on('error', (error) => console.error(error))
 db.once('open', ()=> console.log('Connected to DB'))
+
 
 app.use(cors());
 
@@ -29,6 +30,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+
 
 console.log("app started\n");
 
