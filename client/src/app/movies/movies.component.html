@@ -48,12 +48,12 @@
         <div id="searchbar" class="search-container">
             <input type="text" 
                 [(ngModel)]="searchInput" 
-               
+                (input)="onInputChange()"
                 placeholder="Search movies..."
             >
             <div *ngIf="showDropdown" class="dropdown">
-             <!--    (input)="onInputChange()"
-                (keyup.enter)="selectOption()"
+                 
+              <!--  (keyup.enter)="selectOption()"
                 
                     <ul>
                     <li 

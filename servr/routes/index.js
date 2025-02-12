@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var axios = require('axios');
 
-const {userSchema, movieSchema} = require('../models/schemas');
+const {User, movieSchema} = require('../models/schemas');
 
 var curUser =null;//set upon login, reset on logout
 
@@ -34,7 +34,9 @@ router.get('/', function(req, res, next) {
 });
 
 //Searches title and returns Movie[]
-router.get('/search/:title'), async function(req, res, next){
+router.get('/search/:title', async function(req, res, next){
+  console.log("searchihhththt");
+  let title = req.params.title;
   const options = {
     method: 'GET',
     url:'https://api.themoviedb.org/3/search/movie?api_key=638e95b205871e729e3f953bb7e055b5&page=1&query='+title,
@@ -42,6 +44,7 @@ router.get('/search/:title'), async function(req, res, next){
   try {
     
     const response = await axios.request(options);
+    console.log("searchhit 1 is "+response.data.results.title);
     //convert response into movie array w/ map
     const movies = response.data.results.map(movie => ({
       title: movie.title,
@@ -56,8 +59,7 @@ router.get('/search/:title'), async function(req, res, next){
     console.log(err);
     res.status(500).send('Error retrieving movie data');
   }
-
-}
+});
 
 //Adds movies to watchlist and returns the User
 router.get('/addWatchlist/:title', async function(req, res, next){
@@ -108,7 +110,7 @@ router.get('/addWatchlist/:title', async function(req, res, next){
 router.post('/login', async function(req, res, next){
   //access mongo here to login
   try{
-    curUser = await user.findOne({userName : req.body.userName});
+    curUser = await User.findOne({userName : req.body.userName});
     if(curUser.password == req.body.password){//LOGIN
       if(curUser.disabled == false || curUser.disabled == undefined){
         console.log("logged into=",curUser.userName);
@@ -124,7 +126,7 @@ router.post('/logout', function(req,res,next){
 })
 router.post('/update', async function(req,res,next){
   try{
-    curUser = await user.findByIdAndUpdate(req.body._id, req.body, {new :true});
+    curUser = await User.findByIdAndUpdate(req.body._id, req.body, {new :true});
     res.send(curUser);
   }catch(err){
     console.log(err);
@@ -146,7 +148,7 @@ router.post('/rewatch/:title', async function(req,res,next){
 })
 router.get('/users', async function(req,res,next){
   try{
-    let userList = await user.find({});
+    let userList = await User.find({});
     res.send(userList);
   }catch(err){
     console.log(err);

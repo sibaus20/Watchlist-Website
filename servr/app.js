@@ -14,8 +14,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 //MONGO
+const config = require('./config');
 var mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://admin:admin@cluster0.dncmu.mongodb.net/User');
+mongoose.connect(config.dbConnectionString);
 var db = mongoose.connection;
 db.on('error', (error) => console.error(error))
 db.once('open', ()=> console.log('Connected to DB'))

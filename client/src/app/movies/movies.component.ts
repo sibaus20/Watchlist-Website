@@ -91,6 +91,7 @@ export class MoviesComponent implements OnInit{
           distinctUntilChanged()
         )
         .subscribe(results =>{
+          console.log(results);
           this.searchResults = results;
           this.showDropdown = true;
         })
@@ -258,12 +259,12 @@ export class MoviesComponent implements OnInit{
       })
     })
   }
-
+  //Update watched time, returns user
   rewatch(movie : movie){ 
     //console.log("REWATCHING ",movie); 
     this.curUser.watched.forEach(mov =>{
       if(movie.title == mov.title){
-          this.movieService.rewatch(mov,this.curUser).subscribe((res)=>{ // returns updated user
+          this.movieService.rewatch(mov,this.curUser).subscribe((res)=>{
           this.curUser = res;
           this.updateUser(this.curUser);
         });
@@ -288,7 +289,7 @@ export class MoviesComponent implements OnInit{
     } 
     this.detailsView();
   }
-  remove(list : string, movie : movie){//list= want else watched
+  remove(list : string, movie : movie){//list is either want or watched
     //console.log("REMOVINGFROM"+list, movie);
     //this.printmovies();
     if(list == "want"){
@@ -299,7 +300,7 @@ export class MoviesComponent implements OnInit{
         }
         c++;
       })
-    }else{//delete a watched
+    }else{//delete a watched movie
       let c=0;
       this.curUser.watched.forEach(rmovie =>{
         if(rmovie.title == movie.title){
@@ -312,18 +313,17 @@ export class MoviesComponent implements OnInit{
     //this.printmovies();
     this.updateUser(this.curUser);
   }
-
+  //returns user with ordered watched[]
   filterBy(filter:string){//watched page
-    this.movieService.sort(filter,this.curUser).subscribe(res=>{//returns user with ordered watched[]
+    this.movieService.sort(filter,this.curUser).subscribe(res=>{
       //console.log("newlyFILTERED",res);
       this.curUser=res;
       this.updateLists();
     })
   }
-
-  disableUser(user : user){//settings only admin
-    
-    user.disabled = !user.disabled;//flip bool
+  //settings for admin
+  disableUser(user : user){
+    user.disabled = !user.disabled;
     //console.log("afterDISABLEUSER",user);
     this.updateUser(user);
   }

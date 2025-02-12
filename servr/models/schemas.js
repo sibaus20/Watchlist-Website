@@ -17,8 +17,10 @@ const userSchema = new mongoose.Schema({
    want : [movieSchema],
    watched : [movieSchema]
 })
+//Allows mongoose operations on userSchema data
+const User = mongoose.model('User', userSchema);
 
 module.exports = {
-    userSchema: userSchema,
+    User,
     movieSchema: movieSchema,
 };
