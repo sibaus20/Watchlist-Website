@@ -1,6 +1,6 @@
 import { movie } from "./movie";
 
-export interface User {
+export interface user {
    _id : String,
    userName : String,
    password : String,

@@ -1,6 +1,7 @@
 import { Component, OnInit, Input , ChangeDetectorRef } from '@angular/core';
+import  {debounceTime, distinctUntilChanged, switchMap} from 'rxjs/operators';
 import { movie } from '../models/movie';
-import { User } from '../models/user';
+import { user } from '../models/user';
 
 import { MovieService } from '../services/movie.service';
 
@@ -14,12 +15,17 @@ export class MoviesComponent implements OnInit{
   @Input() userName? : string;
   @Input() password? : string;
 
+  searchInput: string = '';
+  searchResults: any[] = [];
+  showDropdown: boolean = false;
+  highlightedIndex: number = -1;
+
   constructor(
     private movieService : MovieService,
     private cd: ChangeDetectorRef
   ){}
   
-  public curUser:  User = {
+  public curUser:  user = {
     _id: '',
     userName: '',
     password: '',
@@ -67,16 +73,38 @@ export class MoviesComponent implements OnInit{
     console.log(this.curUser.watched);
   }
 
-  searchInput: string = '';
-  search(){//movie is added to wants in server, user returned
+  addWatchlist(){//movie is added to wants in server, user returned
     //console.log("searching for", this.searchInput);
     //this.printmovies();
 
-    this.movieService.searchMovie(this.searchInput).subscribe((res)=>{
-      this.curUser = res;
+    this.movieService.watchlistMovie(this.searchInput).subscribe(results => {
+      this.curUser = results;
       this.updateLists();
     });
   }
+
+  onInputChange(){
+    if(this.searchInput.length > 2){
+      this.movieService.search(this.searchInput)
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged()
+        )
+        .subscribe(results =>{
+          this.searchResults = results;
+          this.showDropdown = true;
+        })
+    }
+
+
+  }
+
+
+
+
+
+
+
   updateLists(){
     //reset todoTable
     let todoTable = document.getElementById("todoTable") as HTMLTableElement;
@@ -293,13 +321,13 @@ export class MoviesComponent implements OnInit{
     })
   }
 
-  disableUser(user : User){//settings only admin
+  disableUser(user : user){//settings only admin
     
     user.disabled = !user.disabled;//flip bool
     //console.log("afterDISABLEUSER",user);
     this.updateUser(user);
   }
-  updateUser(user : User){
+  updateUser(user : user){
     //console.log("UPDATINGUSER",user );
     this.movieService.update(user).subscribe(user=>{
       if(this.curUser._id == user._id){
@@ -309,8 +337,6 @@ export class MoviesComponent implements OnInit{
     });
     this.updateLists();
   }
-
-
 
   watchedView(){
     document.getElementById("nav")!.style.display="block";

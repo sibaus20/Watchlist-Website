@@ -42,10 +42,31 @@
         </div>
     </form>
 
+<!--TODO Change search() create oninputchange() and selectOption()-->
+
     <div id="todoPage">
         <div id="searchbar" class="search-container">
-            <input type="text" [(ngModel)]="searchInput" placeholder="Search movies...">
-            <button (click)="search()">Search</button>
+            <input type="text" 
+                [(ngModel)]="searchInput" 
+               
+                placeholder="Search movies..."
+            >
+            <div *ngIf="showDropdown" class="dropdown">
+             <!--    (input)="onInputChange()"
+                (keyup.enter)="selectOption()"
+                
+                    <ul>
+                    <li 
+                        *ngFor="let result of searchResults; let i = index"
+                        (click)="selectOption(result)"
+                        [class.highlighted]="i === highlightedIndex"
+                        >
+                        {{result.title}} {{{result.year}}}
+                    </li>
+                </ul>-->
+            </div>
+
+            <button (click)="addWatchlist()">Add Movie</button>
         </div>
         <table id="todoTable" class="table table-striped">
             <thead>

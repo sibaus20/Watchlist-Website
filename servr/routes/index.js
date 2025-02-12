@@ -2,8 +2,7 @@ var express = require('express');
 var router = express.Router();
 var axios = require('axios');
 
-var User = require('../models/user');
-const user = require('../models/user');
+const {userSchema, movieSchema} = require('../models/schemas');
 
 var curUser =null;//set upon login, reset on logout
 
@@ -23,8 +22,6 @@ async function run(){
     password: 'userB'
   })
 }
-// run();
-
 function printMovies(){
   console.log("PRINTNG MOVIES");
   console.log(curUser.want);
@@ -36,7 +33,34 @@ router.get('/', function(req, res, next) {
   res.send('Welcome to the Server');
 });
 
-router.get('/search/:title', async function(req, res, next){
+//Searches title and returns Movie[]
+router.get('/search/:title'), async function(req, res, next){
+  const options = {
+    method: 'GET',
+    url:'https://api.themoviedb.org/3/search/movie?api_key=638e95b205871e729e3f953bb7e055b5&page=1&query='+title,
+   };
+  try {
+    
+    const response = await axios.request(options);
+    //convert response into movie array w/ map
+    const movies = response.data.results.map(movie => ({
+      title: movie.title,
+      released: movie.release_date,
+      description: movie.overview,
+      posterUrl: movie.posterUrl,
+    }))
+    
+    res.json(movies);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Error retrieving movie data');
+  }
+
+}
+
+//Adds movies to watchlist and returns the User
+router.get('/addWatchlist/:title', async function(req, res, next){
   //console.log("searchhit on "+req.params.title);
   let title = req.params.title;
   const options = {
@@ -46,9 +70,10 @@ router.get('/search/:title', async function(req, res, next){
   try {
     const response = await axios.request(options);
     var data = response.data;
-    //console.log("API DATA = ",data.results[0].title);
+   // console.log("Total results:", data.total_results);
+   // console.log("Total pages:", data.total_pages);
 
-    //turn data into movie then send
+    //convert response into movie 
     var movie = {
       title: data.results[0].title,
       released: data.results[0].release_date,
@@ -76,7 +101,7 @@ router.get('/search/:title', async function(req, res, next){
     
   } catch (err) {
     console.log(err);
-    res.status(500).send('Error retrieving movie data');
+    res.status(500).send('Error adding movie data');
   }
 });
 

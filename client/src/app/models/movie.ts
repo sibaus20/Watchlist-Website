@@ -4,4 +4,5 @@ export interface movie{
     description: string,
     watchDate: Date,//IF NULL MEANS WANT TO WATCH, IF VAL MEANS WATCHED
     ownerID: string,
+    posterUrl: string,
 }

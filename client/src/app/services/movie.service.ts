@@ -3,7 +3,10 @@ import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { movie } from '../models/movie';
-import { User } from '../models/user';
+import { user } from '../models/user';
+import { observableToBeFn } from 'rxjs/internal/testing/TestScheduler';
+
+//Service handling server interaction
 
 @Injectable({
   providedIn: 'root'
@@ -12,29 +15,34 @@ export class MovieService {
   private URL : String = 'http://localhost:3000';
   constructor(private http: HttpClient) {}
 
-  searchMovie(title : string) : Observable<User>{
-    let url = this.URL+`/search/`+title;
-    var ans = this.http.get<User>(url);
-    return ans;
+  search(title : string) : Observable<[movie]> {
+    let url = this.URL+'/search/'+title;
+    return this.http.get<[movie]>(url);
   }
-  login( userName : String, password : String  ) : Observable<User> {
-    let headers = { "Content-Type": "application/x-www-form-urlencoded"};
+
+  watchlistMovie(title : string) : Observable<user>{
+    let url = this.URL+`/addWatchlist/`+title;
+    return this.http.get<user>(url);
+  }
+  login( userName : String, password : String  ) : Observable<user> {
     console.log("logging into "+userName+" with pass "+password);
-    return this.http.post<User>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} );
+
+    let headers = { "Content-Type": "application/x-www-form-urlencoded"};
+    return this.http.post<user>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} );
   }
-  update(user: User): Observable<User> {
+  update(user: user): Observable<user> {
     let headers = { "Content-Type": "application/json" };
-    return this.http.post<User>(this.URL + "/update", user, { headers });
+    return this.http.post<user>(this.URL + "/update", user, { headers });
   }  
-  rewatch(movie:movie,user:User):Observable<User>{
+  rewatch(movie:movie,user:user):Observable<user>{
     let headers =  { "Content-Type": "application/json" };
-    return this.http.post<User>(this.URL + "/rewatch/"+movie.title, user, { headers });
+    return this.http.post<user>(this.URL + "/rewatch/"+movie.title, user, { headers });
   }
-  users():Observable<[User]>{
-    return this.http.get<[User]>(this.URL+"/users")
+  users():Observable<[user]>{
+    return this.http.get<[user]>(this.URL+"/users")
   }
-  sort(filter:string, user:User):Observable<User>{
+  sort(filter:string, user:user):Observable<user>{
     let headers =  { "Content-Type": "application/json" };
-    return this.http.post<User>(this.URL+'/sort/'+filter,user,{headers});
+    return this.http.post<user>(this.URL+'/sort/'+filter,user,{headers});
   }
 }
