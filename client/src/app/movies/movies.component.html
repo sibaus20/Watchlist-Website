@@ -1,25 +1,24 @@
 <body>
-    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-bottom: 11px;">
-        <div class="container-fluid"> 
-            <a class="navbar-brand" href="#">MovieList</a>
-            <div class="collapse navbar-collapse" id="profile">
-            <ul class="navbar-nav" style="position:absolute;top:5px;left:150px;margin-right:4em;">
+    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            
+            <ul id="navBtnsL" class="navbar-nav">
                 <li class="nav-item">
-                    <button id="todoBtn" type="button" class="btn mb-3 btn-secondary" (click)="todoView()">Want to Watch</button>
+                    <button id="todoBtn" type="button" class="btn btn-secondary" (click)="todoView()">Want to Watch</button>
                 </li>
                 <li class="nav-item">
-                    <button id="watchedBtn" type="button" class="btn mb-3 btn-secondary" (click)="watchedView()">Already Watched</button>
-                </li>
-            </ul>
-            <ul class="navbar-nav" style="position:absolute;top:5px;right:0;margin-right:4em;">
-                <li class="nav-item">
-                <button id="settingsBtn" *ngIf="curUser.admin" type="button" class="btn mb-3 btn-secondary" (click)="settingsView()">Settings</button>
-                </li>
-                <li class="nav-item">
-                    <button id="logoutBtn" type="button" class="btn mb-3 btn-secondary" (click)="logout()">Logout</button>
+                    <button id="watchedBtn" type="button" class="btn btn-secondary" (click)="watchedView()">Already Watched</button>
                 </li>
             </ul>
-            </div>
+            <h1 id="title" class="mx-auto">MovieList</h1>
+            <ul id="navBtnsR" class="navbar-nav ">
+                <li class="nav-item">
+                    <button id="settingsBtn" *ngIf="curUser.admin" type="button" class="btn btn-secondary" (click)="settingsView()">Settings</button>
+                </li>
+                <li class="nav-item">
+                    <button id="logoutBtn" type="button" class="btn btn-secondary" (click)="logout()">Logout</button>
+                </li>
+            </ul>
         </div>
     </nav>
 
@@ -27,51 +26,49 @@
         <h3>Login</h3>                      
         <div>
             <div class="form-group mb-2">
-            <label for="lg_userName" class="sr-only">Username</label>
-            <input id="userInput" type="text" class="form-control" name="userName" placeholder="userName" [(ngModel)]="userName">
+                <label for="lg_userName" class="sr-only">Username</label>
+                <input id="userInput" type="text" class="form-control" name="userName" placeholder="userName" [(ngModel)]="userName">
             </div>
-
             <div class="form-group mb-2">
-            <label for="lg_password" class="sr-only">Password</label>
-            <input id="passInput" type="password" class="form-control" name="password" placeholder="password" [(ngModel)]="password">        
-        </div>
-
-        <button type="submit" (click)="login()" class="btn btn-primary btn-sm">Login
-            <i class="glyphicon glyphicon-chevron-right"></i>
-        </button>
+                <label for="lg_password" class="sr-only">Password</label>
+                <input id="passInput" type="password" class="form-control" name="password" placeholder="password" [(ngModel)]="password">        
+            </div>
+            <button type="submit" (click)="login()" class="btn btn-primary btn-sm">Login</button>
         </div>
     </form>
 
-<!--TODO Change search() create oninputchange() and selectOption()-->
-
     <div id="todoPage">
-        <div id="searchbar" class="search-container">
-            <input type="text" 
+        <div id="search-container">
+            <input id="searchBar" 
+                type="text"
                 [(ngModel)]="searchInput" 
                 (input)="onInputChange()"
+                (keyup.enter)="onEnter()"
+                (keyup.arrowDown)="onArrowDown()"
+                (keyup.arrowUp)="onArrowUp()"
                 placeholder="Search movies..."
             >
-            <div *ngIf="showDropdown" class="dropdown">
-                 
-              <!--  (keyup.enter)="selectOption()"
-                
-                    <ul>
-                    <li 
-                        *ngFor="let result of searchResults; let i = index"
-                        (click)="selectOption(result)"
-                        [class.highlighted]="i === highlightedIndex"
-                        >
-                        {{result.title}} {{{result.year}}}
-                    </li>
-                </ul>-->
-            </div>
-
-            <button (click)="addWatchlist()">Add Movie</button>
+            <button id="addBtn" (click)="addWatchlist()">Add Movie</button>            
         </div>
+
+        <div *ngIf="showDropdown" class="dropdown">
+            <ul>
+                <li 
+                    *ngFor="let result of searchResults.slice(0,7); let i = index"
+                    (click)="selectResult(result)"
+                    [class.highlighted]="i === highlightedIndex"
+                    (mouseenter)="highlightedIndex = i"
+                    >
+                    {{  result.title  }} {{  result.year  }}
+                </li>
+            </ul>
+        </div>
+
+            
         <table id="todoTable" class="table table-striped">
             <thead>
                 <tr>
-                    <th style="text-align: center; font-size: xx-large;" colspan="4">Want to Watch List</th>
+                    <th style="border: none; text-align: center; font-size: xx-large;" colspan="4">Want to Watch List</th>
                 </tr>
                 <tr class="table-active">
                     <th scope="col">Title</th>

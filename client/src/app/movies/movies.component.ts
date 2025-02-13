@@ -86,24 +86,41 @@ export class MoviesComponent implements OnInit{
   onInputChange(){
     if(this.searchInput.length > 2){
       this.movieService.search(this.searchInput)
-        .pipe(
-          debounceTime(300),
-          distinctUntilChanged()
-        )
+        .pipe(debounceTime(300), distinctUntilChanged())
         .subscribe(results =>{
-          console.log(results);
+          
           this.searchResults = results;
           this.showDropdown = true;
+          this.highlightedIndex = -1;
         })
+    }else{
+      this.searchResults = [];
+      this.showDropdown = false;
     }
-
-
   }
 
+  selectResult(result: any){
+    this.searchInput = result.title;
+    this.showDropdown = false;
+  }
 
+  onArrowDown(){
+    if(this.highlightedIndex < this.searchResults.length -1){
+      this.highlightedIndex++;
+    }
+  }
 
+  onArrowUp(){
+    if(this.highlightedIndex > 0){
+      this.highlightedIndex--;
+    }
+  }
 
-
+  onEnter(){
+    if(this.highlightedIndex >= 0 && this.highlightedIndex < this.searchResults.length){
+      this.selectResult(this.searchResults[this.highlightedIndex]);
+    }
+  }
 
 
   updateLists(){
