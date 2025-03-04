@@ -43,7 +43,6 @@ export class MoviesComponent implements OnInit{
   login() {
     this.movieService.login((<HTMLInputElement>document.getElementById("userInput")).value, (<HTMLInputElement>document.getElementById("passInput")).value).subscribe(user =>{
       if(user){
-        //console.log("logged in",user);
         this.todoView();
         this.curUser = user;
         this.updateUserlist();
@@ -53,7 +52,6 @@ export class MoviesComponent implements OnInit{
   }
 
   logout(){
-    //console.log("LOGOUT");
     //reset local data
     this.curUser = {
       _id: '',
@@ -74,21 +72,17 @@ export class MoviesComponent implements OnInit{
   }
 
   addWatchlist(){//movie is added to wants in server, user returned
-    //console.log("searching for", this.searchInput);
-    //this.printmovies();
-
     this.movieService.watchlistMovie(this.searchInput).subscribe(results => {
       this.curUser = results;
       this.updateLists();
     });
-  }
+  } //NOTE: adding already added movies will return nothing
 
   onInputChange(){
     if(this.searchInput.length > 2){
       this.movieService.search(this.searchInput)
         .pipe(debounceTime(300), distinctUntilChanged())
         .subscribe(results =>{
-          
           this.searchResults = results;
           this.showDropdown = true;
           this.highlightedIndex = -1;
@@ -103,25 +97,24 @@ export class MoviesComponent implements OnInit{
     this.searchInput = result.title;
     this.showDropdown = false;
   }
-
   onArrowDown(){
     if(this.highlightedIndex < this.searchResults.length -1){
       this.highlightedIndex++;
     }
   }
-
   onArrowUp(){
     if(this.highlightedIndex > 0){
       this.highlightedIndex--;
     }
   }
-
   onEnter(){
     if(this.highlightedIndex >= 0 && this.highlightedIndex < this.searchResults.length){
       this.selectResult(this.searchResults[this.highlightedIndex]);
     }
   }
-
+  onEscape(){
+    this.showDropdown = false;
+  }
 
   updateLists(){
     //reset todoTable
@@ -236,7 +229,6 @@ export class MoviesComponent implements OnInit{
 
   updateUserlist(){
     this.movieService.users().subscribe(users=>{
-      //console.log("USERLIST",users);
       let userTable = document.getElementById("settingsTable") as HTMLTableElement;
       let userBody = userTable.querySelector('tbody');
       while(userBody!.firstChild){
@@ -248,30 +240,32 @@ export class MoviesComponent implements OnInit{
         let c1 = row.appendChild(document.createElement('td'));
         c1.innerHTML = ""+user.userName;
         let c2 = row.appendChild(document.createElement('td'));
-        let btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn';
-        btn.style.color = "black";
-        btn.style.border = "5px black solid"
-        btn.style.borderRadius = "30%";
-        btn.addEventListener('click', ()=>{
-          this.disableUser(user);
-          if(btn.innerHTML == "Enable"){
-            btn.innerHTML = "Disable";
-            btn.style.backgroundColor = "red";
-          }else{
+        if(user.userName != "admin"){//Master admin can't disable self
+          let btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn';
+          btn.style.color = "black";
+          btn.style.border = "5px black solid"
+          btn.style.borderRadius = "30%";
+          btn.addEventListener('click', ()=>{
+            this.disableUser(user);
+            if(btn.innerHTML == "Enable"){
+              btn.innerHTML = "Disable";
+              btn.style.backgroundColor = "red";
+            }else{
+              btn.innerHTML = "Enable";
+              btn.style.backgroundColor = "lightgreen";
+            }
+          })
+          if(user.disabled){
             btn.innerHTML = "Enable";
             btn.style.backgroundColor = "lightgreen";
+          }else{
+            btn.innerHTML = "Disable";
+            btn.style.backgroundColor = "red";
           }
-        })
-        if(user.disabled){
-          btn.innerHTML = "Enable";
-          btn.style.backgroundColor = "lightgreen";
-        }else{
-          btn.innerHTML = "Disable";
-          btn.style.backgroundColor = "red";
+          c2.appendChild(btn);
         }
-        c2.appendChild(btn);
         document.getElementById('settingsTable')!.getElementsByTagName('tbody')[0].appendChild(row);
       })
     })
@@ -296,13 +290,13 @@ export class MoviesComponent implements OnInit{
     this.updateUser(this.curUser);
   }
   seeDetails(list:string, movie : movie){
-    document.getElementById('title')!.innerHTML = movie.title;
-    document.getElementById('description')!.innerHTML = movie.description;
-    document.getElementById('released')!.innerHTML = movie.released;
+    document.getElementById('Dtitle')!.innerHTML = movie.title;
+    document.getElementById('Ddescription')!.innerHTML = movie.description;
+    document.getElementById('Dreleased')!.innerHTML = movie.released;
     if(list == "want"){
-      document.getElementById('watched')!.innerHTML = "Haven't seen this one yet!";
+      document.getElementById('Dwatched')!.innerHTML = "Haven't seen this one yet!";
     }else{
-      document.getElementById('watched')!.innerHTML = (""+movie.watchDate).substring(0,10);
+      document.getElementById('Dwatched')!.innerHTML = (""+movie.watchDate).substring(0,10);
     } 
     this.detailsView();
   }
@@ -340,8 +334,9 @@ export class MoviesComponent implements OnInit{
   }
   //settings for admin
   disableUser(user : user){
-    user.disabled = !user.disabled;
-    //console.log("afterDISABLEUSER",user);
+    if(user.userName != "admin"){ //Master admin ACC can't disable self
+      user.disabled = !user.disabled;
+    }
     this.updateUser(user);
   }
   updateUser(user : user){

@@ -22,7 +22,7 @@
         </div>
     </nav>
 
-    <form id="loginPage" class="">
+    <form id="loginPage">
         <h3>Login</h3>                      
         <div>
             <div class="form-group mb-2">
@@ -46,25 +46,38 @@
                 (keyup.enter)="onEnter()"
                 (keyup.arrowDown)="onArrowDown()"
                 (keyup.arrowUp)="onArrowUp()"
+                (keyup.escape)="onEscape()"
                 placeholder="Search movies..."
             >
             <button id="addBtn" (click)="addWatchlist()">Add Movie</button>            
         </div>
 
         <div *ngIf="showDropdown" class="dropdown">
-            <ul>
+            <ul class="dropdown-list">
                 <li 
                     *ngFor="let result of searchResults.slice(0,7); let i = index"
                     (click)="selectResult(result)"
                     [class.highlighted]="i === highlightedIndex"
                     (mouseenter)="highlightedIndex = i"
+                    class="dropdown-item"
                     >
-                    {{  result.title  }} {{  result.year  }}
+                    <div class="poster-container">
+                        <img 
+                            *ngIf="result.posterUrl"
+                            [src]="result.posterUrl"
+                            alt="Movie Poster"
+                            class="poster-thumbnail"
+                        >
+                        <div *ngIf="!result.posterUrl" class="poster-placeholder">
+                            No Image 
+                        </div>
+                    </div>
+                    <div class="movie-title">{{  result.title  }}</div>
+                    
                 </li>
             </ul>
         </div>
 
-            
         <table id="todoTable" class="table table-striped">
             <thead>
                 <tr>
@@ -78,7 +91,6 @@
                 </tr>
             </thead>
             <tbody id="todoRows">
-
             </tbody>
         </table>
     </div>
@@ -111,18 +123,18 @@
 
     <div id="detailsPage">
         <div class="titleBox">
-            <h2 id="title">Title Box</h2>
+            <h2 id="Dtitle">Title Box</h2>
         </div>
         <div class="descriptionBox">
-            <h5 id="description"></h5>
+            <h5 id="Ddescription"></h5>
         </div>
         <div id="releasedBox">
             <H4>Released on</H4>
-            <h5 id="released"></h5>
+            <h5 id="Dreleased"></h5>
         </div>
         <div id="watchedBox">
             <h4>Watched on</h4>
-            <h5 id="watched"></h5>
+            <h5 id="Dwatched"></h5>
         </div>
     </div>
 

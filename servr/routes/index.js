@@ -4,6 +4,8 @@ var axios = require('axios');
 
 const {User, movieSchema} = require('../models/schemas');
 
+const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/';
+
 var curUser =null;//set upon login, reset on logout
 
 //Testing DB
@@ -35,24 +37,21 @@ router.get('/', function(req, res, next) {
 
 //Searches title and returns Movie[]
 router.get('/search/:title', async function(req, res, next){
-  console.log("searchihhththt");
   let title = req.params.title;
   const options = {
     method: 'GET',
     url:'https://api.themoviedb.org/3/search/movie?api_key=638e95b205871e729e3f953bb7e055b5&page=1&query='+title,
    };
   try {
-    
     const response = await axios.request(options);
-    console.log("searchhit 1 is "+response.data.results.title);
     //convert response into movie array w/ map
     const movies = response.data.results.map(movie => ({
       title: movie.title,
       released: movie.release_date,
       description: movie.overview,
-      posterUrl: movie.posterUrl,
-    }))
+      posterUrl: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}w154${movie.poster_path}` :  null,// w154 is thumbnail size
     
+    }))
     res.json(movies);
 
   } catch (err) {
@@ -80,8 +79,10 @@ router.get('/addWatchlist/:title', async function(req, res, next){
       title: data.results[0].title,
       released: data.results[0].release_date,
       description: data.results[0].overview,
+      posterUrl: data.results[0].poster_path ? `${TMDB_IMAGE_BASE_URL}w154${data.results[0].poster_path}` :  null,// w154 is thumbnail size
       watchDate: new Date()
     };
+
     var dupe = false;
     curUser.want.forEach(Wmovie =>{
       if(Wmovie.title == movie.title){
