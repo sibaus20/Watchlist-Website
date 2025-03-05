@@ -24,7 +24,7 @@ async function run(){
     password: 'userB'
   })
 }
-function printMovies(){
+function printMovies(){ // testing func
   console.log("PRINTNG MOVIES");
   console.log(curUser.want);
   console.log(curUser.watched);
