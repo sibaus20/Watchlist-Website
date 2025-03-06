@@ -1,0 +1,22 @@
+<nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        
+        <ul id="navBtnsL" class="navbar-nav">
+            <li class="nav-item">
+                <button id="todoBtn" type="button" class="btn btn-secondary" routerLink="/want-watch">Want to Watch</button>
+            </li>
+            <li class="nav-item">
+                <button id="watchedBtn" type="button" class="btn btn-secondary" routerLink="/already-watched">Already Watched</button>
+            </li>
+        </ul>
+        <h1 id="title" class="mx-auto">MovieList</h1>
+        <ul id="navBtnsR" class="navbar-nav ">
+            <li class="nav-item">
+                <button id="settingsBtn" *ngIf="user.admin" type="button" class="btn btn-secondary" routerLink="settings">Settings</button>
+            </li>
+            <li class="nav-item">
+                <button id="logoutBtn" type="button" class="btn btn-secondary" routerLink="/login" (click)="logout()">Logout</button>
+            </li>
+        </ul>
+    </div>
+</nav>

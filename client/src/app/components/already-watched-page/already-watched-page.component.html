@@ -1,0 +1,25 @@
+<div id="watchedPage">
+    <table id="watchedTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th style="text-align: center; font-size:xx-large;" colspan="5">Already Watched List</th>
+            </tr>
+            <tr class="table-active">
+                <th scope="col">Title</th>
+                <th scope="col">Date Seen</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="watchedRows">
+
+        </tbody>
+    </table>
+    <div id="sortBox">
+        <p>Sort By: </p>
+        <button id="titlesortBtn" type="button" class="sortBtn" (click)="filterBy('title')">Title</button>
+        <button id="datesortBtn" type="button" class="sortBtn" (click)="filterBy('date')">Date</button>
+        
+    </div>
+</div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, Input , ChangeDetectorRef } from '@angular/core';
-import  {debounceTime, distinctUntilChanged, switchMap} from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap} from 'rxjs/operators';
 import { movie } from '../models/movie';
-import { user } from '../models/user';
+import { User } from '../models/user';
 
 import { MovieService } from '../services/movie.service';
 
@@ -25,7 +25,7 @@ export class MoviesComponent implements OnInit{
     private cd: ChangeDetectorRef
   ){}
   
-  public curUser:  user = {
+  public curUser:  User = {
     _id: '',
     userName: '',
     password: '',
@@ -333,13 +333,13 @@ export class MoviesComponent implements OnInit{
     })
   }
   //settings for admin
-  disableUser(user : user){
+  disableUser(user : User){
     if(user.userName != "admin"){ //Master admin ACC can't disable self
       user.disabled = !user.disabled;
     }
     this.updateUser(user);
   }
-  updateUser(user : user){
+  updateUser(user : User){
     //console.log("UPDATINGUSER",user );
     this.movieService.update(user).subscribe(user=>{
       if(this.curUser._id == user._id){

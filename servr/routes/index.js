@@ -35,7 +35,7 @@ router.get('/', function(req, res, next) {
   res.send('Welcome to the Server');
 });
 
-//Searches title and returns Movie[]
+//Searches for title and returns options
 router.get('/search/:title', async function(req, res, next){
   let title = req.params.title;
   const options = {
@@ -44,7 +44,6 @@ router.get('/search/:title', async function(req, res, next){
    };
   try {
     const response = await axios.request(options);
-    //convert response into movie array w/ map
     const movies = response.data.results.map(movie => ({
       title: movie.title,
       released: movie.release_date,
@@ -60,9 +59,8 @@ router.get('/search/:title', async function(req, res, next){
   }
 });
 
-//Adds movies to watchlist and returns the User
+//Adds movie to watchlist and returns the User
 router.get('/addWatchlist/:title', async function(req, res, next){
-  //console.log("searchhit on "+req.params.title);
   let title = req.params.title;
   const options = {
     method: 'GET',
@@ -70,19 +68,17 @@ router.get('/addWatchlist/:title', async function(req, res, next){
   };
   try {
     const response = await axios.request(options);
-    var data = response.data;
-   // console.log("Total results:", data.total_results);
-   // console.log("Total pages:", data.total_pages);
+    var data = response.data.results[0];
 
-    //convert response into movie 
     var movie = {
-      title: data.results[0].title,
-      released: data.results[0].release_date,
-      description: data.results[0].overview,
-      posterUrl: data.results[0].poster_path ? `${TMDB_IMAGE_BASE_URL}w154${data.results[0].poster_path}` :  null,// w154 is thumbnail size
+      title: data.title,
+      released: data.release_date,
+      description: data.overview,
+      posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}w154${data.poster_path}` :  null,// w154 is thumbnail size
       watchDate: new Date()
     };
 
+    //If movie is in either list already do nothing.
     var dupe = false;
     curUser.want.forEach(Wmovie =>{
       if(Wmovie.title == movie.title){
@@ -96,12 +92,8 @@ router.get('/addWatchlist/:title', async function(req, res, next){
     })
     if(!dupe){
       curUser.want[curUser.want.length] = movie;
-      //console.log("movie is= ",movie);//--------------------
-      //console.log("AFTER ADDING WANT");
-      //printMovies();
       res.send(curUser);
     }
-    
   } catch (err) {
     console.log(err);
     res.status(500).send('Error adding movie data');
@@ -112,12 +104,16 @@ router.post('/login', async function(req, res, next){
   //access mongo here to login
   try{
     curUser = await User.findOne({userName : req.body.userName});
-    if(curUser.password == req.body.password){//LOGIN
-      if(curUser.disabled == false || curUser.disabled == undefined){
-        console.log("logged into=",curUser.userName);
-      res.send(curUser);
-      }
+    if(curUser.password !== req.body.password){
+      return res.status(401).json({ error: 'Incorrect Password' });
     }
+    if(curUser.disabled == false || curUser.disabled == undefined){
+      return res.statuus(403).json({ error: 'Account Disabled' });  
+    }
+    let sentUser = curUser.toObject();
+    delete sentUser.password;
+    
+    res.send(curUser);
   }catch(err){
     console.log(err)
   }
@@ -155,26 +151,23 @@ router.get('/users', async function(req,res,next){
     console.log(err);
   }
 });
-router.post('/sort/:filter', async function(req,res,next){
+router.post('/sort/:filter', async function(req,res,next){ //Sort by title or date watched
   try{
     let list = req.body.watched;
-    //console.log("BEFORESORT",list);
     if(req.params.filter == 'title'){
       list.sort((a, b) => {
         if (a.title < b.title) {
           return -1;
         } else if (a.title > b.title) {
           return 1;
-        } else {
-          return 0;
         }
+        return 0;
       });
     }else if(req.params.filter == 'date'){
       list.sort((a, b) => {
         return new Date(a.watchDate) - new Date(b.watchDate);
       });
     }
-    //console.log("AFTERSORT",list);
     req.body.watched = list;
     res.send(req.body);
   }catch(err){

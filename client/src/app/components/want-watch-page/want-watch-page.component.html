@@ -1,0 +1,57 @@
+<div id="todoPage">
+    <div id="search-container">
+        <input id="searchBar" 
+            type="text"
+            [(ngModel)]="searchInput" 
+            (input)="onInputChange()"
+            (keyup.enter)="onEnter()"
+            (keyup.arrowDown)="onArrowDown()"
+            (keyup.arrowUp)="onArrowUp()"
+            (keyup.escape)="onEscape()"
+            placeholder="Search movies..."
+        >
+        <button id="addBtn" (click)="addWatchlist()">Add Movie</button>            
+    </div>
+
+    <div *ngIf="showDropdown" class="dropdown">
+        <ul class="dropdown-list">
+            <li 
+                *ngFor="let result of searchResults.slice(0,7); let i = index"
+                (click)="selectResult(result)"
+                [class.highlighted]="i === highlightedIndex"
+                (mouseenter)="highlightedIndex = i"
+                class="dropdown-item"
+                >
+                <div class="poster-container">
+                    <img 
+                        *ngIf="result.posterUrl"
+                        [src]="result.posterUrl"
+                        alt="Movie Poster"
+                        class="poster-thumbnail"
+                    >
+                    <div *ngIf="!result.posterUrl" class="poster-placeholder">
+                        No Image 
+                    </div>
+                </div>
+                <div class="movie-title">{{  result.title  }}</div>
+                
+            </li>
+        </ul>
+    </div>
+
+    <table id="todoTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th style="border: none; text-align: center; font-size: xx-large;" colspan="4">Want to Watch List</th>
+            </tr>
+            <tr class="table-active">
+                <th scope="col">Title</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="todoRows">
+        </tbody>
+    </table>
+</div>

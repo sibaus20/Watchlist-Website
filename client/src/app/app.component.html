@@ -8,8 +8,8 @@
         
     </head>
     <body class="background">
-        <div >
-            <app-movies></app-movies>
-        </div>
+        <app-nav-bar ngIf*="showNavBar"></app-nav-bar>
+    
+        <router-outlet></router-outlet>
     </body>
 </html>
