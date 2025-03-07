@@ -8,8 +8,7 @@
         
     </head>
     <body class="background">
-        <app-nav-bar ngIf*="showNavBar"></app-nav-bar>
-    
+        <app-nav-bar *ngIf="showNavBar"></app-nav-bar>
         <router-outlet></router-outlet>
     </body>
 </html>

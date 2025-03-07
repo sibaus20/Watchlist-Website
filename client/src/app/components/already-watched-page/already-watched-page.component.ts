@@ -14,10 +14,11 @@ export class AlreadyWatchedPageComponent {
 
   //returns user with ordered watched[]
   filterBy(filter:string){//watched page
+    /* 
     this.userService.sort(filter,this.user).subscribe(res=>{
       //console.log("newlyFILTERED",res);
       this.user=res;
-      this.updateLists();
-    })
+      //this.updateLists();
+    })*/
   }
 }

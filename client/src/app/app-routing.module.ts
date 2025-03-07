@@ -7,6 +7,7 @@ import { SettingsPageComponent } from './components/settings-page/settings-page.
 import { DetailsPageComponent } from './components/details-page/details-page.component';
 
 const routes: Routes = [
+  {path: '', redirectTo: '/login', pathMatch: 'full'},//<router-outlet> is initially login
   {path: 'login', component: LoginPageComponent},
   {path: 'want-watch', component: WantWatchPageComponent},
   {path: 'already-watched', component: AlreadyWatchedPageComponent},

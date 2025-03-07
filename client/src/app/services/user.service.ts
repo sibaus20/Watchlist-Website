@@ -7,7 +7,7 @@ import { User } from '../models/user';
 export class UserService {
   private URL : String = 'http://localhost:3000';
   constructor(private http: HttpClient) {
-    const savedUser = localStorage.getItem('user');
+    const savedUser = localStorage.getItem('user');//Check for saved user
     if(savedUser){
       this.curUserSubject.next(JSON.parse(savedUser));
     }
@@ -16,10 +16,20 @@ export class UserService {
   private curUserSubject = new BehaviorSubject<User | null>(null);
   public user$: Observable<User | null> = this.curUserSubject.asObservable();
 
-  login( userName : String, password : String  ){
+  login( userName : String, password : String  ){//Saves server's user to localstorage
     console.log("logging into "+userName+" with pass "+password);
     let headers = { "Content-Type": "application/x-www-form-urlencoded"};
-    let userData = this.http.post<User>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} );
+    let userData = this.http.post<User>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} 
+    ).subscribe({ next: (userFromServer)=> {
+      localStorage.setItem('user', JSON.stringify(userFromServer));
+      this.curUserSubject.next(userFromServer);
+    },
+    error:(err) =>{
+      console.error('Login error', err);
+      alert('Invalid Username or Password');
+    }
+  });
+      //prob delete
     let user:  User = {
         _id: '',
         userName: '',
@@ -29,10 +39,6 @@ export class UserService {
         want: [],
         watched: []
     };
-    
-    // BELOW is SENDING EMPTY FIX Later
-    localStorage.setItem('user', JSON.stringify(user));
-    this.curUserSubject.next(user);
   }
   logout(){
     localStorage.removeItem('')

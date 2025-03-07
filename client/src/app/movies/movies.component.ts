@@ -25,6 +25,10 @@ export class MoviesComponent implements OnInit{
     private cd: ChangeDetectorRef
   ){}
   
+
+  //ALLL TO BE DELETED
+
+
   public curUser:  User = {
     _id: '',
     userName: '',
@@ -41,14 +45,14 @@ export class MoviesComponent implements OnInit{
       this.loginView();
   }
   login() {
-    this.movieService.login((<HTMLInputElement>document.getElementById("userInput")).value, (<HTMLInputElement>document.getElementById("passInput")).value).subscribe(user =>{
+   /**  this.movieService.login((<HTMLInputElement>document.getElementById("userInput")).value, (<HTMLInputElement>document.getElementById("passInput")).value).subscribe(user =>{
       if(user){
         this.todoView();
         this.curUser = user;
         this.updateUserlist();
         this.updateUser(this.curUser)
       }
-    });
+    });*/
   }
 
   logout(){

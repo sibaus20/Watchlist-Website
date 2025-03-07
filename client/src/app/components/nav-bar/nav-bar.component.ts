@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { UserService } from 'src/app/services/user.service';
 
@@ -8,15 +9,17 @@ import { UserService } from 'src/app/services/user.service';
   styleUrls: ['./nav-bar.component.css']
 })
 export class NavBarComponent {
-  constructor(private userService: UserService){}
+  constructor(
+    private userService: UserService,
+    private router: Router
+  ){}
   public user = this.userService.user$
 
-
   logout(){
-    //reset localstorage, TOOODOO  redirects to login
     this.userService.logout();
-    
-    
+    this.router.navigate(['/login']);//Instead of routerlink in HTML
   }
 
+
+  //DONT FORGET TO ADD SETTINGS BACK TO ADMIN ONLY
 }
