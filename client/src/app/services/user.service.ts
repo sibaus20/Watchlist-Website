@@ -1,54 +1,192 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable} from 'rxjs';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, catchError, Observable, tap, throwError} from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { JwtHelperService } from '@auth0/angular-jwt';
+
 import { User } from '../models/user';
+import { movie } from '../models/movie';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private URL : String = 'http://localhost:3000';
-  constructor(private http: HttpClient) {
-    const savedUser = localStorage.getItem('user');//Check for saved user
-    if(savedUser){
-      this.curUserSubject.next(JSON.parse(savedUser));
-    }
+  private readonly URL : String = `http://localhost:3000`;
+  private readonly AUTH_KEY = 'auth_token';
+  private jwtHelper = new JwtHelperService;
+  private readonly GUEST: User ={
+    _id: '',
+    userName: 'Guest',
+    admin: false,
+    disabled: true,
+    want: [],
+    watched: []
+  };
+  private userSubject: BehaviorSubject<User>;
+  public user$: Observable<User>;
+
+  constructor(private http: HttpClient) {//User is either already saved or Guest for login
+    const initialUser = this.getValidatedUser();
+    this.userSubject = new BehaviorSubject<User>(initialUser);
+    this.user$ = this.userSubject.asObservable();
+
   }
 
-  private curUserSubject = new BehaviorSubject<User | null>(null);
-  public user$: Observable<User | null> = this.curUserSubject.asObservable();
+  public search(title : string) : Observable<movie[]> {//Takes title gives movies
+    return this.http.get<movie[]>(`${this.URL}/search/${title}`);
+  }
 
-  login( userName : String, password : String  ){//Saves server's user to localstorage
-    console.log("logging into "+userName+" with pass "+password);
-    let headers = { "Content-Type": "application/x-www-form-urlencoded"};
-    let userData = this.http.post<User>(this.URL + "/login", "userName=" + userName + "&password=" + password, {headers} 
-    ).subscribe({ next: (userFromServer)=> {
-      localStorage.setItem('user', JSON.stringify(userFromServer));
-      this.curUserSubject.next(userFromServer);
-    },
-    error:(err) =>{
-      console.error('Login error', err);
-      alert('Invalid Username or Password');
+  public get currentUser(): User{ 
+    return this.userSubject.getValue();
+  }
+  private getValidatedUser(): User { //Ensures no corrupt data
+    //Contains both Security token & cleaned User 
+    const tokens = localStorage.getItem(this.AUTH_KEY);
+    if(!tokens || this.jwtHelper.isTokenExpired(tokens)){
+      return this.GUEST;
     }
-  });
-      //prob delete
-    let user:  User = {
-        _id: '',
-        userName: '',
-        password: '',
-        admin: false,
-        disabled: false,
-        want: [],
-        watched: []
-    };
+    try {
+      const decoded = this.jwtHelper.decodeToken(tokens);
+      let valUser = this.validateUser(decoded);
+      console.log('Validated User: ',valUser);
+      return valUser;
+    }catch(error){
+      console.error('Invalid UserData', error);
+      return this.GUEST;
+    }
+  }
+  private validateUser(tokenData: any):User { 
+    return {
+      _id: tokenData?._id || this.GUEST._id,
+      userName: tokenData?.userName || this.GUEST.userName,
+      admin: Boolean(tokenData?.admin),
+      disabled: Boolean(tokenData?.disabled),
+      want: Array.isArray(tokenData?.want) ? tokenData.want : [],
+      watched: Array.isArray(tokenData?.watched) ? tokenData.watched : []
+    }
+  }
+  login( userName : String, password : String ) : Observable<{ token: string }> {//Saves server's user to localstorage
+    console.log("logging into "+userName+" with pass "+password);
+    let headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const body = {userName, password};
+    return this.http.post<{token: string}>(`${this.URL}/login`, body, {headers})
+    .pipe(
+      tap(response => {
+        localStorage.setItem(this.AUTH_KEY, response.token);
+        const decodedUser = this.jwtHelper.decodeToken(response.token);
+        this.userSubject.next(this.validateUser(decodedUser));
+      }),
+      catchError(error => {
+        console.error('Login error', error);
+        return throwError(() => error);
+      })
+    );
   }
   logout(){
-    localStorage.removeItem('')
-    this.curUserSubject.next(null)
+    localStorage.removeItem(this.AUTH_KEY);
+    this.userSubject.next(this.GUEST)
+  }
+  
+  private getAuthHeaders(): HttpHeaders{
+    const token = localStorage.getItem(this.AUTH_KEY);
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    });
   }
 
-  sort(filter:string, user:User){
-    let headers =  { "Content-Type": "application/json" };
-    let userData = this.http.post<User>(this.URL+'/sort/'+filter,user,{headers});
+  //Alters select properties of user, use for UI updates like filter?
+ /**  public updateUser(newData: Partial<User>): void { 
+    const mergedUser = this.validateUser({
+      ...this.currentUser,
+      ...newData
+    });
+    this.saveUser(mergedUser);
+    this.userSubject.next(mergedUser);
+  }
+  private saveUser(user: User): void{
+    try{
+      localStorage.setItem(this.KEY, JSON.stringify(user));
+    }catch (err){
+      console.error('Error saving user', err);
+    }
+  }*/
+  //Apends movie to wants first, call again to reach watched 
+  public addToWants(movie: movie) : Observable<User>{
+    if(this.currentUser.userName == "Guest"){
+      alert('Not logged in');
+      return throwError(() => new Error('User not logged in'))
+    }
+    return this.http.post<User>(
+    `${this.URL}/addWant`, { movie }, { headers: this.getAuthHeaders() }).pipe(
+      tap (updatedUser => this.userSubject.next(updatedUser)),
+      catchError(error => {
+        console.error('Error adding to Want list:', error);
+        return throwError(() => new Error('Failed adding to Wants'));
+      })
+    );
+  }
+  public removeFromWants(movie: movie){
 
+    return this.http.delete<User>(
+    `${this.URL}/removeWant/${movie.id}`, { headers: this.getAuthHeaders() } ).pipe(
+      tap (updatedUser => {
+        this.userSubject.next(updatedUser)
+        console.log('wantRemoved from User',updatedUser)
+      }),
+      catchError(error => { return throwError(() => new Error('Failed to remove from Wants'))})
+    );
+  }
+  public addToWatched(movie: movie){
+    if(this.currentUser.userName == "Guest"){
+      alert('Not logged in');
+      return throwError(() => new Error('User not logged in'))
+    }
+    return this.http.post<User>(
+    `${this.URL}/addWatched`, { movie }, { headers: this.getAuthHeaders() }).pipe(
+      tap (updatedUser => this.userSubject.next(updatedUser)),
+      catchError(error => {
+        console.error('Error adding to Watched list:', error);
+        return throwError(() => new Error('Failed adding to Watched'));
+      })
+    );
+  }
+  public removeFromWatched(movie: movie){
+    return this.http.delete<User>(
+      `${this.URL}/removeWatched/${movie.id}`, { headers: this.getAuthHeaders() } ).pipe(
+        tap (updatedUser => this.userSubject.next(updatedUser)),
+        catchError(error => { return throwError(() => new Error('Failed to remove from Watched'))})
+      );
+  }
+  public rewatchMovie(movie: movie){
+    return this.http.post<User>(
+      `${this.URL}/rewatch/${movie.id}`, {}, {headers: this.getAuthHeaders() } ).pipe(
+        tap (updatedUser => this.userSubject.next(updatedUser)),
+        catchError(error => { return throwError(() => new Error('Failed to rewatch'))})
+      );
+  }
+  public getUsers(){
+    return this.http.get<User[]>(
+      `${this.URL}/users`, {headers: this.getAuthHeaders() } ).pipe(
+        catchError(error => {return throwError(() => new Error('Failed to get users'))})
+      );
+  }
+
+  sort(filter:string){ //Only reOrdering so no server
+    const currentUser = this.currentUser;
+    if(currentUser.userName == 'Guest') return ;
+    const sortedList = currentUser.watched;
+    if(filter == 'date'){
+      sortedList.sort((a, b) => {
+        const dateA = new Date(a.released).getTime();
+        const dateB = new Date(b.released).getTime();
+        return dateA - dateB;
+      })
+    } else if(filter == 'title'){
+      sortedList.sort((a,b) => a.title.localeCompare(b.title));
+    }
+    console.log('List after sort: ',sortedList)
+    const updatedUser: User = {
+      ...currentUser,
+      watched: sortedList
+    }
 
   }
 

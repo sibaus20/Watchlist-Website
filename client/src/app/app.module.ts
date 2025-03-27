@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { JwtHelperService, JWT_OPTIONS } from '@auth0/angular-jwt';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { MoviesComponent } from './movies/movies.component';
 import { LoginPageComponent } from './components/login-page/login-page.component';
 import { NavBarComponent } from './components/nav-bar/nav-bar.component';
 import { WantWatchPageComponent } from './components/want-watch-page/want-watch-page.component';
@@ -17,7 +17,6 @@ import { DetailsPageComponent } from './components/details-page/details-page.com
 @NgModule({
   declarations: [
     AppComponent,
-    MoviesComponent,
     LoginPageComponent,
     NavBarComponent,
     WantWatchPageComponent,
@@ -32,7 +31,7 @@ import { DetailsPageComponent } from './components/details-page/details-page.com
     CommonModule,
     FormsModule
   ],
-  providers: [],
+  providers: [{provide: JWT_OPTIONS, useValue: JWT_OPTIONS }, JwtHelperService ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

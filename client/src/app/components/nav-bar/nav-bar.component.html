@@ -1,6 +1,5 @@
-<nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-dark" *ngIf="currentUser$ | async as user">
     <div class="container-fluid">
-        
         <ul id="navBtnsL" class="navbar-nav">
             <li class="nav-item">
                 <button id="todoBtn" type="button" class="btn btn-secondary" routerLink="/want-watch">Want to Watch</button>
@@ -12,7 +11,7 @@
         <h1 id="title" class="mx-auto">MovieList</h1>
         <ul id="navBtnsR" class="navbar-nav ">
             <li class="nav-item">
-                <button id="settingsBtn" type="button" class="btn btn-secondary" routerLink="/settings">Settings</button>
+                <button id="settingsBtn" type="button" class="btn btn-secondary" *ngIf="(currentUser$ | async)?.admin" routerLink="/settings">Settings</button>
             </li>
             <li class="nav-item">
                 <button id="logoutBtn" type="button" class="btn btn-secondary" (click)="logout()">Logout</button>

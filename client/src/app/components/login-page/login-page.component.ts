@@ -10,16 +10,24 @@ import { Router } from '@angular/router';
 export class LoginPageComponent implements OnInit {
 
   constructor(
-    private userService : UserService,
+    public userService : UserService,
     private router : Router
   ){}
 
-  @Input() userName? : string;
-  @Input() password? : string;
+  userName? : string;
+  password? : string;
 
   login(){
-    this.userService.login((<HTMLInputElement>document.getElementById("userInput")).value, (<HTMLInputElement>document.getElementById("passInput")).value);
-    this.router.navigate(['/want-watch']);
+    const username = this.userName || '';
+    const password = this.password || '';
+    this.userService.login(username, password).subscribe({
+      next: (response) => {
+        if(this.userService.currentUser.userName !== 'Guest'){
+          this.router.navigate(['/want-watch']);
+        }
+      },
+      error: (error) => console.log('Login Failed',error)
+    });
   }
   
   ngOnInit(): void {

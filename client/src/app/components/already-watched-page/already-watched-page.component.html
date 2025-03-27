@@ -2,24 +2,37 @@
     <table id="watchedTable" class="table table-striped">
         <thead>
             <tr>
-                <th style="text-align: center; font-size:xx-large;" colspan="5">Already Watched List</th>
+                <th id="listHeader" colspan="5">Already Watched List</th>
             </tr>
             <tr class="table-active">
                 <th scope="col">Title</th>
-                <th scope="col">Date Seen</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <th scope="col"></th>
+                <th scope="col" colspan="3">Date Seen</th>
             </tr>
         </thead>
-        <tbody id="watchedRows">
-
+        <tbody >
+            <tr *ngFor="let movie of watchedMovies$ | async" id="movieDisplay">
+                <td>{{ movie.title }}</td>
+                <td>{{ movie.watchDate | date:'mediumDate'}}</td>
+                <td class="btn-container">
+                    <button
+                        class="btn listBtns"
+                        (click)="rewatch(movie)"
+                        >Rewatch</button>
+                    <button
+                        class="btn listBtns"
+                        (click)="seeDetails(movie)"
+                        >See Details</button>
+                    <button
+                        class="btn listBtns"
+                        (click)="removeWatched(movie)"
+                        >Remove</button>
+                </td>
+            </tr>
         </tbody>
     </table>
     <div id="sortBox">
-        <p>Sort By: </p>
-        <button id="titlesortBtn" type="button" class="sortBtn" (click)="filterBy('title')">Title</button>
-        <button id="datesortBtn" type="button" class="sortBtn" (click)="filterBy('date')">Date</button>
-        
+        <p id="sortTitle">Sort By: </p>
+        <button type="button" class="sortBtn" (click)="filterBy('title')">Title</button>
+        <button type="button" class="sortBtn" (click)="filterBy('date')">Date</button>
     </div>
 </div>

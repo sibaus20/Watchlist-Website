@@ -12,7 +12,7 @@ const routes: Routes = [
   {path: 'want-watch', component: WantWatchPageComponent},
   {path: 'already-watched', component: AlreadyWatchedPageComponent},
   {path: 'settings', component: SettingsPageComponent},
-  {path: 'details', component: DetailsPageComponent}
+  {path: 'details/:id', component: DetailsPageComponent}
 ];
 
 @NgModule({

@@ -1,4 +1,5 @@
 export interface movie{
+    id: string,
     title: string,
     released: string,
     description: string,

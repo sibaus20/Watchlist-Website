@@ -1,27 +1,30 @@
 var express = require('express');
 var router = express.Router();
 var axios = require('axios');
+var bcrypt = require('bcrypt');
+var config = require('../config');
 
 const {User, movieSchema} = require('../models/schemas');
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/';
 
-var curUser =null;//set upon login, reset on logout
+const jwt = require('jsonwebtoken');
+const { disabled } = require('../app');
+const JWT_SECRET = config.JWT_KEY;
+
+var curUser =null;//set upon login, reset on logout DELETE OLD GEN
 
 //Testing DB
 async function run(){
   User.create({
     userName: 'admin',
-    password: 'admin',
     admin : true
   })
   User.create({
-    userName: 'userA',
-    password: 'userA',
+    userName: 'userA'
   });
   User.create({
-    userName: 'userB',
-    password: 'userB'
+    userName: 'userB'
   })
 }
 function printMovies(){ // testing func
@@ -30,12 +33,57 @@ function printMovies(){ // testing func
   console.log(curUser.watched);
 }
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.send('Welcome to the Server');
+router.get('/', function(req, res, next) { /* A nice home page. */
+  res.send('Hey. \nWelcome to the Server');
 });
 
-//Searches for title and returns options
+//Verifies exchanged user and gives req.user for server use
+const authenticate = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) return res.status(401).send('Access denied');
+
+  try{
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = await User.findById(decoded.userId);
+    console.log("Authenticated user:",req.user);
+    next();
+  }catch (err){
+    res.status(401).send('Invalid token');
+  }
+};
+
+router.post('/login', async function(req, res, next){
+  try{
+    const user = await User.findOne({userName : req.body.userName});
+      // .select('userName password admin disabled want');  Limit to Relevant info (not watched)
+    if(!user) return res.status(400).send('Invalid username');
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    //if (!validPassword) return res.status(400).send('Invalid password');
+    if(user.disabled) return res.status(403).send('Account Disabled');  
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        userName: user.userName,
+        admin: user.admin,
+        disabled: user.disabled,
+        want: user.want,
+        watched: user.watched
+      },
+      JWT_SECRET,
+        { expiresIn: '1h'}
+    );
+    res.json({token});
+  }catch(err){
+    console.error(err);
+    res.status(500).json({ error: 'Server Error'});
+  }
+});
+router.post('/logout', function(req,res,next){
+  // Removing jwt token client side handles logout
+});
+//Searches for title and returns movie list
 router.get('/search/:title', async function(req, res, next){
   let title = req.params.title;
   const options = {
@@ -44,7 +92,9 @@ router.get('/search/:title', async function(req, res, next){
    };
   try {
     const response = await axios.request(options);
+
     const movies = response.data.results.map(movie => ({
+      id: movie.id,
       title: movie.title,
       released: movie.release_date,
       description: movie.overview,
@@ -53,94 +103,157 @@ router.get('/search/:title', async function(req, res, next){
     }))
     res.json(movies);
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).send('Error retrieving movie data');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving movies data');
   }
 });
-
-//Adds movie to watchlist and returns the User
-router.get('/addWatchlist/:title', async function(req, res, next){
-  let title = req.params.title;
-  const options = {
-    method: 'GET',
-    url:'https://api.themoviedb.org/3/search/movie?api_key=638e95b205871e729e3f953bb7e055b5&page=1&query='+title,
-  };
+//Adds movie to want list
+router.post('/addWant', authenticate, async function(req, res, next){
   try {
-    const response = await axios.request(options);
-    var data = response.data.results[0];
-
+    var data = req.body.movie;
     var movie = {
+      id: data.id,
       title: data.title,
-      released: data.release_date,
-      description: data.overview,
-      posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}w154${data.poster_path}` :  null,// w154 is thumbnail size
+      released: data.released,
+      description: data.description,
+      posterUrl: data.posterUrl ? 
+        `${TMDB_IMAGE_BASE_URL}w154${data.posterUrl}` :  null,// w154 is thumbnail size
+      watchDate: null
+    };
+    //Checks to verify movie is not already added
+    const existingInWant = await User.findOne( {
+      _id: req.user._id,
+      'want.id': data.id
+    });
+    if(existingInWant){
+      return res.status(409).json({
+        message: 'Movie already in this list',
+        code: 'EXISTS_IN_WANT'
+      })
+    }
+    const existingInWatched = await User.findOne({
+      _id: req.user._id,
+      'watched.id': data.id
+    });
+    if(existingInWatched){
+      return res.status(409).json({
+        message: 'Movie already in watched list',
+        code: 'EXISTS_IN_WATCHED'
+      })
+    }
+    //Update and send user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $push: { want: movie } },
+      { new: true}
+    );
+    console.log("MovieaddedUSER: ",updatedUser)
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error adding movie to Wants');
+  }
+});
+router.delete('/removeWant/:movieId', authenticate, async ( req, res) => {
+  try{
+    const movieId = req.params.movieId;
+    const user = req.user;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $pull: {want: { id: movieId }}},
+      { new: true }
+    );
+
+
+    if (!updatedUser){
+      return res.status(404).send({ error: 'User not found'})
+    }
+
+    return res.json(updatedUser);
+  }catch(error){
+    console.log('Error removing movie from Wants');
+    res.status(500).send({ error: 'Server error removing from want list'});
+  }
+});
+//Adds movie to watched list
+router.post('/addWatched', authenticate, async function(req, res, next){
+  try {
+    var data = req.body.movie;
+    var movie = {
+      id: data.id,
+      title: data.title,
+      released: data.released,
+      description: data.description,
+      posterUrl: data.posterUrl ? 
+        `${TMDB_IMAGE_BASE_URL}w154${data.posterUrl}` :  null,// w154 is thumbnail size
       watchDate: new Date()
     };
-
-    //If movie is in either list already do nothing.
-    var dupe = false;
-    curUser.want.forEach(Wmovie =>{
-      if(Wmovie.title == movie.title){
-        dupe = true;
-      }
+    //Checks to verify movie is not already added
+    const existingInWatched = await User.findOne( {
+      _id: req.user._id,
+      'watched.id': data.id
     });
-    curUser.watched.forEach(Wmovie =>{
-      if(Wmovie.title == movie.title){
-        dupe = true;
-      }
-    })
-    if(!dupe){
-      curUser.want[curUser.want.length] = movie;
-      res.send(curUser);
+    if(existingInWatched){
+      return res.status(409).json({
+        message: 'Movie already in this list',
+        code: 'EXISTS_IN_WATCHED'
+      })
     }
-  } catch (err) {
-    console.log(err);
-    res.status(500).send('Error adding movie data');
+    //Update and send user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $push: { watched: movie } },
+      { new: true}
+    );
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error adding movie to Watched');
   }
 });
-
-router.post('/login', async function(req, res, next){
-  //access mongo here to login
+router.delete('/removeWatched/:movieId', authenticate, async ( req, res) => {
   try{
-    curUser = await User.findOne({userName : req.body.userName});
-    if(curUser.password !== req.body.password){
-      return res.status(401).json({ error: 'Incorrect Password' });
+    console.log('REMOVING MOVEID: ',req.params.movieId)
+    const movieId = req.params.movieId;
+    const user = req.user;
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $pull: {watched: { id: movieId }}},
+      { new: true }
+    );
+    console.log('User after removal', updatedUser)
+    if (!updatedUser){
+      return res.status(404).send({ error: 'User not found'})
     }
-    if(curUser.disabled == false || curUser.disabled == undefined){
-      return res.statuus(403).json({ error: 'Account Disabled' });  
-    }
-    let sentUser = curUser.toObject();
-    delete sentUser.password;
+
+    return res.json(updatedUser);
+  }catch(error){
+    console.log('Error removing movie from Watched');
+    res.status(500).send({ error: 'Server error removing from Watched list'});
+  }
+});
+router.post('/rewatch/:movieId', authenticate, async function(req,res,next){
+  try{
+    console.log('beanshit')
+    const updatedUser = await User.findOneAndUpdate(
+      {
+        _id: req.user._id,
+        'watched.id': req.params.movieId
+      },
+      { $set: { 'watched.$.watchDate': new Date() } },
+      { new: true }
+    )
     
-    res.send(curUser);
-  }catch(err){
-    console.log(err)
-  }
-});
-router.post('/logout', function(req,res,next){
-  this.curUser =null;
-})
-router.post('/update', async function(req,res,next){
-  try{
-    curUser = await User.findByIdAndUpdate(req.body._id, req.body, {new :true});
-    res.send(curUser);
-  }catch(err){
-    console.log(err);
-  }
-});
-router.post('/rewatch/:title', async function(req,res,next){
-  try{
-    let user = req.body;
-    user.watched.forEach(movie =>{
-      if(movie.title == req.params.title){
-        movie.watchDate = new Date;
-      }
-    });
-    curUser = user;
-    res.send(curUser);
-  }catch(err){
-    console.log(err);
+    if(!updatedUser){
+      return res.status(404).json({
+        error: 'Movie not found'
+      })
+    }
+    return res.json(updatedUser)
+  }catch(error){
+    res.status(500).send({error: 'Server error rewatching movie'});
   }
 })
 router.get('/users', async function(req,res,next){

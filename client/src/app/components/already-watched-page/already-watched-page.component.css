@@ -1,0 +1,39 @@
+#listHeader{
+    padding-left: 10vw;
+    font-size:xx-large;
+}
+#movieDisplay{
+
+}
+.btn-container{
+    display: flex;
+    justify-content: space-around;
+    gap: 2vw;
+    flex-wrap: wrap;
+  }
+.listBtns {
+    margin: 5px;
+    flex: 1 1 auto;
+    min-width: 120px;
+    max-width: 180px;
+    font-size: 16px;
+    background-color: #6b60fa4d;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;/*hover effect*/
+  }
+  .listBtns:hover, #searchBtn:hover {
+    background-color: rgb(132, 194, 223);
+  }
+  #sortBox{
+    padding-left: 20px;
+    gap: 20px;
+    display: flex;
+  }
+  #sortTitle{
+
+  }
+  .sortBtn{
+    border-radius: 20%;
+  }
