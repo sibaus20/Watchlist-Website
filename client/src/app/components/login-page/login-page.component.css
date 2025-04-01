@@ -1,9 +1,16 @@
 #loginPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+
+}
+.formBox{
+    padding: 15px;
     max-width : 600px;
     min-width: 300px;
-    padding: 15px;
-    background-color : #eee;
     border-radius: .5em;
     width: 50%;
-    margin: auto;
+    background-color : #eee;
+    margin-bottom: 30px;
 }

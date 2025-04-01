@@ -91,23 +91,26 @@ export class UserService {
       Authorization: `Bearer ${token}`
     });
   }
-
-  //Alters select properties of user, use for UI updates like filter?
- /**  public updateUser(newData: Partial<User>): void { 
-    const mergedUser = this.validateUser({
-      ...this.currentUser,
-      ...newData
-    });
-    this.saveUser(mergedUser);
-    this.userSubject.next(mergedUser);
+  register( userName: String, password: String){
+    console.log("registering: ", userName, 'witpass', password);
+    let headers = new HttpHeaders({'Content-Type': 'application/json'});
+    let body = { userName, password}
+    return this.http.post<{token: string}>(`${this.URL}/register`, body, {headers})
+    .pipe(
+      tap(response => {
+        localStorage.setItem(this.AUTH_KEY, response.token);
+        const decodedUser = this.jwtHelper.decodeToken(response.token);
+        this.userSubject.next(this.validateUser(decodedUser));
+      }),
+      catchError(error =>{
+        if(error.error?.code === 'USERNAME_EXISTS'){
+          throw new Error('Username already taken')
+        }
+        console.error('Registery error', error);
+        return throwError(() => error)
+      })
+    )
   }
-  private saveUser(user: User): void{
-    try{
-      localStorage.setItem(this.KEY, JSON.stringify(user));
-    }catch (err){
-      console.error('Error saving user', err);
-    }
-  }*/
   //Apends movie to wants first, call again to reach watched 
   public addToWants(movie: movie) : Observable<User>{
     if(this.currentUser.userName == "Guest"){
@@ -124,7 +127,6 @@ export class UserService {
     );
   }
   public removeFromWants(movie: movie){
-
     return this.http.delete<User>(
     `${this.URL}/removeWant/${movie.id}`, { headers: this.getAuthHeaders() } ).pipe(
       tap (updatedUser => {

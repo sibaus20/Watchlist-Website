@@ -1,6 +1,14 @@
-<form id="loginPage" (ngSubmit)="login()" *ngIf="userService.user$ | async as user">
-    <h3>Login</h3>                      
-    <input [(ngModel)]="userName" name="userName" class="form-control mb-2">
-    <input [(ngModel)]="password" name="password" type="password" class="form-control mb-2">
-    <button type="submit" class="btn btn-primary btn-sm">Login</button>
-</form>
+<div id="loginPage">
+    <form class="formBox" (ngSubmit)="login()" *ngIf="userService.user$ | async as user">
+        <h3>Login</h3>                      
+        <input [(ngModel)]="userName" name="userName" class="form-control mb-2">
+        <input [(ngModel)]="password" name="password" type="password" class="form-control mb-2">
+        <button type="submit" class="btn btn-primary btn-sm">Login</button>
+    </form>
+    <form class="formBox" (ngSubmit)="register()" *ngIf="userService.user$ | async as user">
+        <h3>Register</h3>                      
+        <input [(ngModel)]="rUserName" name="rUserName" class="form-control mb-2">
+        <input [(ngModel)]="rPassword" name="rPassword" type="password" class="form-control mb-2">
+        <button type="submit" class="btn btn-primary btn-sm">Sign Up</button>
+    </form>
+</div>

@@ -1,6 +1,7 @@
 import { Component, OnInit, Input} from '@angular/core';
 import { UserService } from 'src/app/services/user.service';
 import { Router } from '@angular/router';
+import { catchError } from 'rxjs';
 
 @Component({
   selector: 'app-login-page',
@@ -17,6 +18,9 @@ export class LoginPageComponent implements OnInit {
   userName? : string;
   password? : string;
 
+  rUserName? : string;
+  rPassword? : string;
+
   login(){
     const username = this.userName || '';
     const password = this.password || '';
@@ -27,6 +31,21 @@ export class LoginPageComponent implements OnInit {
         }
       },
       error: (error) => console.log('Login Failed',error)
+    });
+  }
+  register(){
+    const regUserName = this.rUserName || '';
+    const regPassword = this.rPassword || '';
+    this.userService.register(regUserName, regPassword).subscribe({
+      next: (response) => {
+        this.router.navigate(['want-watch']);
+      }, 
+      error: (error) => {
+        if(error.error?.code === 'USERNAME_EXISTS'){
+          throw new Error('Username is already taken');
+        }
+        throw new Error('Registration failed')
+      }
     });
   }
   
