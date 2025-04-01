@@ -15,8 +15,8 @@ var mongoose = require('mongoose');
 mongoose.connect(config.dbConnectionString);
 var db = mongoose.connection;
 db.on('error', (error) => console.error(error))
-db.once('open', ()=> console.log('Connected to DB'))
 
+db.once('open', async ()=>console.log('Connected to DB'));
 
 app.use(cors());
 

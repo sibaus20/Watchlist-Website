@@ -9,8 +9,8 @@ const {User, movieSchema} = require('../models/schemas');
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/';
 
 const jwt = require('jsonwebtoken');
-const { disabled } = require('../app');
 const JWT_SECRET = config.JWT_KEY;
+const {body, validationResult} = require('express-validator');
 
 var curUser =null;//set upon login, reset on logout DELETE OLD GEN
 
@@ -52,14 +52,29 @@ const authenticate = async (req, res, next) => {
     res.status(401).send('Invalid token');
   }
 };
+const ensureStringId = async(req, res, next) =>{
+  // Convert params
+  if (req.params.movieId) {
+    req.params.movieId = String(req.params.movieId);
+  }
+  
+  // Convert body.movie.id if present
+  if (req.body?.movie?.id) {
+    req.body.movie.id = String(req.body.movie.id);
+  }
+  
+  next();
+}
 
 router.post('/login', async function(req, res, next){
   try{
     const user = await User.findOne({userName : req.body.userName});
+    console.log('loginuser: ',user, 'againstthepasswrd: ',req.body.password)
       // .select('userName password admin disabled want');  Limit to Relevant info (not watched)
-    if(!user) return res.status(400).send('Invalid username');
+    if (!user) return res.status(400).send('Invalid username/password')
     const validPassword = await bcrypt.compare(req.body.password, user.password);
-    //if (!validPassword) return res.status(400).send('Invalid password');
+  console.log('validpassis ',validPassword)
+    if (!validPassword) return res.status(400).send('Invalid username/password');
     if(user.disabled) return res.status(403).send('Account Disabled');  
 
     const token = jwt.sign(
@@ -83,6 +98,64 @@ router.post('/login', async function(req, res, next){
 router.post('/logout', function(req,res,next){
   // Removing jwt token client side handles logout
 });
+router.post('/register', 
+  [
+    body('userName')
+      .isLength({min: 3}).withMessage('Username must be at least 3 characters')
+      .trim()
+      .escape(),
+    body('password')
+      .isLength({min: 5}).withMessage('Password must be at least 5 characters')
+  ], async function(req, res, next){
+  try{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+      return res.status(400).json({errors: errors.array() })
+    }
+
+    const user = await User.findOne({userName: req.body.userName});
+    if(user){
+      return res.status(409).json({
+        success: false,
+        error: 'Username already exists',
+        code: 'USERNAME_EXISTS'
+      })
+    }
+    const newUser = await User.create({
+      userName: req.body.userName,
+      password: req.body.password
+    })
+    const token = jwt.sign(
+      {
+        _id: newUser._id,
+        userName: newUser.userName,
+        admin: newUser.admin,
+        disabled: newUser.disabled,
+        want: newUser.want,
+        watched: newUser.watched
+      },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    res.status(201).json({  token  })
+  }catch(err){
+    console.error(err);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid username or password format',
+        code: 'VALIDATION_ERROR'
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Server error during registration',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+
 //Searches for title and returns movie list
 router.get('/search/:title', async function(req, res, next){
   let title = req.params.title;
@@ -109,7 +182,7 @@ router.get('/search/:title', async function(req, res, next){
   }
 });
 //Adds movie to want list
-router.post('/addWant', authenticate, async function(req, res, next){
+router.post('/addWant', ensureStringId, authenticate, async function(req, res, next){
   try {
     var data = req.body.movie;
     var movie = {
@@ -143,8 +216,8 @@ router.post('/addWant', authenticate, async function(req, res, next){
       })
     }
     //Update and send user
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.user._id },
       { $push: { want: movie } },
       { new: true}
     );
@@ -155,7 +228,7 @@ router.post('/addWant', authenticate, async function(req, res, next){
     res.status(500).send('Error adding movie to Wants');
   }
 });
-router.delete('/removeWant/:movieId', authenticate, async ( req, res) => {
+router.delete('/removeWant/:movieId', ensureStringId, authenticate, async ( req, res) => {
   try{
     const movieId = req.params.movieId;
     const user = req.user;
@@ -178,7 +251,7 @@ router.delete('/removeWant/:movieId', authenticate, async ( req, res) => {
   }
 });
 //Adds movie to watched list
-router.post('/addWatched', authenticate, async function(req, res, next){
+router.post('/addWatched', ensureStringId, authenticate, async function(req, res, next){
   try {
     var data = req.body.movie;
     var movie = {
@@ -213,7 +286,7 @@ router.post('/addWatched', authenticate, async function(req, res, next){
     res.status(500).send('Error adding movie to Watched');
   }
 });
-router.delete('/removeWatched/:movieId', authenticate, async ( req, res) => {
+router.delete('/removeWatched/:movieId', ensureStringId, authenticate, async ( req, res) => {
   try{
     console.log('REMOVING MOVEID: ',req.params.movieId)
     const movieId = req.params.movieId;
@@ -234,7 +307,7 @@ router.delete('/removeWatched/:movieId', authenticate, async ( req, res) => {
     res.status(500).send({ error: 'Server error removing from Watched list'});
   }
 });
-router.post('/rewatch/:movieId', authenticate, async function(req,res,next){
+router.post('/rewatch/:movieId', ensureStringId, authenticate, async function(req,res,next){
   try{
     console.log('beanshit')
     const updatedUser = await User.findOneAndUpdate(
@@ -264,28 +337,5 @@ router.get('/users', async function(req,res,next){
     console.log(err);
   }
 });
-router.post('/sort/:filter', async function(req,res,next){ //Sort by title or date watched
-  try{
-    let list = req.body.watched;
-    if(req.params.filter == 'title'){
-      list.sort((a, b) => {
-        if (a.title < b.title) {
-          return -1;
-        } else if (a.title > b.title) {
-          return 1;
-        }
-        return 0;
-      });
-    }else if(req.params.filter == 'date'){
-      list.sort((a, b) => {
-        return new Date(a.watchDate) - new Date(b.watchDate);
-      });
-    }
-    req.body.watched = list;
-    res.send(req.body);
-  }catch(err){
-    console.log(err);
-  }
-})
 
 module.exports = router;
