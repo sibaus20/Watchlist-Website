@@ -45,12 +45,19 @@
                 <th id="listHeader" colspan="4">Want to Watch List</th>
             </tr>
             <tr class="table-active">
+                <th></th>
                 <th>Title</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <tr *ngFor="let movie of wantMovies$ | async">
+                <td><img 
+                    [src]="movie.posterUrl"
+                    alt="Movie Poster"
+                    class="listPic"
+                    >
+                </td>
                 <td>{{ movie.title }}</td>
                 <td class="btn-container">
                     <button

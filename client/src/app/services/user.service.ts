@@ -26,13 +26,13 @@ export class UserService {
     const initialUser = this.getValidatedUser();
     this.userSubject = new BehaviorSubject<User>(initialUser);
     this.user$ = this.userSubject.asObservable();
-
   }
 
   public search(title : string) : Observable<movie[]> {//Takes title gives movies
     return this.http.get<movie[]>(`${this.URL}/search/${title}`);
   }
 
+//User functs
   public get currentUser(): User{ 
     return this.userSubject.getValue();
   }
@@ -111,7 +111,36 @@ export class UserService {
       })
     )
   }
-  //Apends movie to wants first, call again to reach watched 
+  public getUsers(){
+    return this.http.get<User[]>(
+      `${this.URL}/users`, {headers: this.getAuthHeaders() } ).pipe(
+        catchError(error => {return throwError(() => new Error('Failed to get users'))})
+      );
+  }
+  public disableUser(userId: String, state: boolean){
+    console.log('Tryin to disable')
+    return this.http.patch<User>(
+      `${this.URL}/users/${userId}`, 
+      { disabled: state },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(() => {//If current user disabled, logout
+        const currentUser = this.currentUser;
+        if(currentUser._id == userId){
+          this.logout();
+        }
+      })
+    )
+  }
+
+
+
+
+
+
+
+
+//Movie list alterations
   public addToWants(movie: movie) : Observable<User>{
     if(this.currentUser.userName == "Guest"){
       alert('Not logged in');
@@ -164,12 +193,8 @@ export class UserService {
         catchError(error => { return throwError(() => new Error('Failed to rewatch'))})
       );
   }
-  public getUsers(){
-    return this.http.get<User[]>(
-      `${this.URL}/users`, {headers: this.getAuthHeaders() } ).pipe(
-        catchError(error => {return throwError(() => new Error('Failed to get users'))})
-      );
-  }
+
+
 
   sort(filter:string){ //Only reOrdering so no server
     const currentUser = this.currentUser;

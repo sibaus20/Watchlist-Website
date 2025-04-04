@@ -20,10 +20,18 @@ export class SettingsPageComponent implements OnInit{
 
   fetchUsers(){
     this.userService.getUsers().subscribe({
-      next: (users) => this.users = users,
+      next: (users) => {
+        this.users = users
+        
+      },
       error: (error) => console.error('Failed to fetch users')
     })
   };
-
-  //TODO: Make Enabled/Disbaled a button
+  disableUser(userId: String, state: boolean){
+    this.userService.disableUser(userId, state).subscribe({
+      next: () => {
+        this.fetchUsers();//refresh list
+      }
+    });
+  }
 }

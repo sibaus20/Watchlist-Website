@@ -1,3 +1,23 @@
 #settingsPage{
     text-align: center;
 }
+.btn-enabled{
+    background-color: rgb(90, 214, 90);
+}
+.btn-disabled{
+    background-color: rgb(252, 80, 80);
+}
+.btn-admin{
+    background-color: rgb(89, 119, 173);
+    position: relative;
+}
+.btn-admin::before{
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%; /* Line length */
+  height: 2px; /* Line thickness */
+  background-color: red;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}

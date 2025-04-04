@@ -3,16 +3,19 @@
         <thead>
             <tr class="table-active">
                 <th>Username</th>
-                <th>Admin</th>
                 <th>Enable/Disable</th>
-                <th></th>
+                <td></td>
             </tr>
         </thead>
         <tbody id="settingsRows">
             <tr *ngFor="let user of users">
                 <td>{{ user.userName }}</td>
-                <td>{{ user.admin ? 'Yes' : 'No' }}</td>
-                <td>{{ user.disabled? 'Disabled' : 'Enabled' }}<td>
+                <td><button (click)="!user.admin && disableUser(user._id, !user.disabled)" class="btn"
+                    [class.btn-admin]="user.admin"
+                    [class.btn-enabled]="!user.admin && !user.disabled"
+                    [class.btn-disabled]="!user.admin && user.disabled">
+                    {{ user.admin ? 'Admin' : user.disabled? 'Disabled' : 'Enabled' }}
+                </button><td>
             </tr>
         </tbody>
     </table>

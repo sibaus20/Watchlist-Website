@@ -14,25 +14,6 @@ const {body, validationResult} = require('express-validator');
 
 var curUser =null;//set upon login, reset on logout DELETE OLD GEN
 
-//Testing DB
-async function run(){
-  User.create({
-    userName: 'admin',
-    admin : true
-  })
-  User.create({
-    userName: 'userA'
-  });
-  User.create({
-    userName: 'userB'
-  })
-}
-function printMovies(){ // testing func
-  console.log("PRINTNG MOVIES");
-  console.log(curUser.want);
-  console.log(curUser.watched);
-}
-
 router.get('/', function(req, res, next) { /* A nice home page. */
   res.send('Hey. \nWelcome to the Server');
 });
@@ -57,7 +38,6 @@ const ensureStringId = async(req, res, next) =>{
   if (req.params.movieId) {
     req.params.movieId = String(req.params.movieId);
   }
-  
   // Convert body.movie.id if present
   if (req.body?.movie?.id) {
     req.body.movie.id = String(req.body.movie.id);
@@ -154,6 +134,35 @@ router.post('/register',
     });
   }
 });
+router.get('/users', async function(req,res,next){
+  try{
+    let userList = await User.find({});
+    res.send(userList);
+  }catch(err){
+    console.log(err);
+  }
+});
+router.patch('/users/:userId', async function (req, res, next) {
+  try{
+    let userId = req.params.userId;
+    let newState = req.body.disabled;
+    console.log("settting to state:", newState)
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { disabled: newState } },
+      { new: true }
+    )
+
+    if(!updatedUser){
+      return res.status(404)({error: 'User not found'})
+    }
+    return res.json(updatedUser)
+  }catch(error){
+    res.status(500).send({error: 'Server error rewatching movie'});
+  }
+})
+
 
 
 //Searches for title and returns movie list
@@ -181,7 +190,7 @@ router.get('/search/:title', async function(req, res, next){
     res.status(500).send('Error retrieving movies data');
   }
 });
-//Adds movie to want list
+//Functions to alter movie list
 router.post('/addWant', ensureStringId, authenticate, async function(req, res, next){
   try {
     var data = req.body.movie;
@@ -239,7 +248,6 @@ router.delete('/removeWant/:movieId', ensureStringId, authenticate, async ( req,
       { new: true }
     );
 
-
     if (!updatedUser){
       return res.status(404).send({ error: 'User not found'})
     }
@@ -250,7 +258,6 @@ router.delete('/removeWant/:movieId', ensureStringId, authenticate, async ( req,
     res.status(500).send({ error: 'Server error removing from want list'});
   }
 });
-//Adds movie to watched list
 router.post('/addWatched', ensureStringId, authenticate, async function(req, res, next){
   try {
     var data = req.body.movie;
@@ -329,13 +336,6 @@ router.post('/rewatch/:movieId', ensureStringId, authenticate, async function(re
     res.status(500).send({error: 'Server error rewatching movie'});
   }
 })
-router.get('/users', async function(req,res,next){
-  try{
-    let userList = await User.find({});
-    res.send(userList);
-  }catch(err){
-    console.log(err);
-  }
-});
+
 
 module.exports = router;

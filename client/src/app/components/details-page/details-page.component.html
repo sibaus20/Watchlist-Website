@@ -1,18 +1,21 @@
-<div id="detailsPage" *ngIf="movie">
+<div class="detailsPage" *ngIf="movie">
     <div class="titleBox">
-        <h2 id="Dtitle">{{ movie.title }}</h2>
+        <h2 class="Dtitle">{{ movie.title }}</h2>
     </div>
     <div class="descriptionBox">
         <h5>{{ movie.description }}</h5>
     </div>
-    <div id="datesContainer">
-        <div id="releasedBox">
+    <div class="datesContainer">
+        <div class="releasedBox">
             <H4>Released on</H4>
             <h5>{{ movie.released }}</h5>
         </div>
-        <div id="watchedBox">
+        <div class="watchedBox">
             <h4>Watched on</h4>
             <h5>{{ movie.watchDate ? (movie.watchDate | date: 'mediumDate') : 'Not seen yet' }}</h5>
         </div>
+    </div>
+    <div class="posterBox">
+        <img class="moviePoster" [src]="movie.posterUrl">
     </div>
 </div>

@@ -1,7 +1,12 @@
 #todoPage{
   text-align: center;
 }
-
+#todoTable tbody td{
+  vertical-align: middle;
+}
+#todoTable tbody tr{
+  height: 100px;
+}
 #search-container {
   position: relative;
   display: flex;
@@ -109,6 +114,10 @@ li.highlighted {
   text-align: left;
   padding-left: 10vw;
 }
+.listPic{
+  width: 70px;
+  height: 90px;
+}
 .btn-container{
   display: flex;
   justify-content: space-around;
@@ -116,7 +125,7 @@ li.highlighted {
   flex-wrap: wrap;
 }
 .listBtns {
-  margin: 5px;
+
   flex: 1 1 auto;
   min-width: 120px;
   max-width: 300px;
@@ -126,6 +135,7 @@ li.highlighted {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;/*hover effect*/
+  margin-top: 25px;
 }
 .listBtns:hover, #searchBtn:hover {
   background-color: rgb(132, 194, 223);
